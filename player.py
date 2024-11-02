@@ -2,12 +2,15 @@ from circleshape import CircleShape
 from constants import PLAYER_RADIUS, PLAYER_TURN_SPEED, PLAYER_SPEED, PLAYER_SHOOT_SPEED, PLAYER_SHOOT_COOLDOWN
 from shot import Shot
 import pygame
+import math
 
 class Player(CircleShape):
     def __init__(self, x, y):
         super().__init__(x, y, PLAYER_RADIUS)
         self.rotation = 0
         self.timer = 0
+        self.isShooting = False
+        self.score = 0
     # in the player class
     def triangle(self):
         forward = pygame.Vector2(0, 1).rotate(self.rotation)
@@ -20,12 +23,11 @@ class Player(CircleShape):
     def draw(self, screen):
         pygame.draw.polygon(screen, "white", self.triangle(), 2)
 
-    def rotate(self, dt):
-        self.rotation += PLAYER_TURN_SPEED * dt
-    
-    def move(self, dt):
-        forward = pygame.Vector2(0, 1).rotate(self.rotation)
-        self.position += forward * PLAYER_SPEED * dt
+    def moveX(self, dt):
+        self.position.x += dt*PLAYER_SPEED 
+
+    def moveY(self, dt):
+        self.position.y += dt*PLAYER_SPEED 
 
     def shoot(self, dt):
         if self.timer > 0: 
@@ -38,14 +40,20 @@ class Player(CircleShape):
         keys = pygame.key.get_pressed()
 
         if keys[pygame.K_a]:
-            self.rotate(dt*(-1))
+            self.moveX(dt*(-1))
         if keys[pygame.K_d]:
-            self.rotate(dt)
+            self.moveX(dt)
         if keys[pygame.K_w]:
-            self.move(dt)
+            self.moveY(dt*(-1))
         if keys[pygame.K_s]:
-            self.move(dt*(-1))
-        if keys[pygame.K_SPACE]:
+            self.moveY(dt)
+
+        if self.isShooting:
             self.shoot(dt)
+                
+        #Rotate player to mouse
+        mouse_pos = pygame.mouse.get_pos()
+        angle = math.degrees(math.atan2(mouse_pos[1] - self.position[1], mouse_pos[0] - self.position[0]))
+        self.rotation = angle + 270
 
         self.timer -= dt
